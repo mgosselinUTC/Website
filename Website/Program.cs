@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Website
@@ -13,6 +14,8 @@ namespace Website
     {
         static void Main(string[] args)
         {
+
+            /*
             TcpListener listener = new TcpListener(IPAddress.Any, 80);
             listener.Start();
 
@@ -61,7 +64,19 @@ namespace Website
 
                 }
 
+            
             }
+            */
+
+
+            TcpClient client = new TcpClient("google.com.", 80);
+            client.Connect("http://www.google.com/", 80);
+            var stream = client.GetStream();
+            byte[] send = Encoding.ASCII.GetBytes("GET / HTTP/1.1\nHost: google.com\nConnection: keep-alive\nCache-Control: max-age=0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\nUser-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, Like Gecko) Chrome/40.0.2214.28 Safari/537.36\nAccept-Encoding: gzip, deflate, sdcd\nAcceptLanguage: en-US,en;q=0.8\n");
+            stream.Write(send, 0, send.Length);
+
+            Thread.Sleep(500);
+
 
 
         }
