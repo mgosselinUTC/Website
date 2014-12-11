@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -31,7 +32,6 @@ namespace Website
                 try
                 {
                     TcpClient client = listener.AcceptTcpClient();
-
                     HTTPRequest request = new HTTPRequest(client);
                     request.respond();
 
@@ -111,8 +111,8 @@ namespace Website
 
         public void respond()
         {
-            if (protocolVersion.StartsWith("HTTP/")) HTTPConnectionHelper.respondTo(this);
-            //if (protocolVersion.StartsWith("MNDP/")) MDNPConnectionHelper.respondTo();
+            if (protocolVersion.StartsWith("HTTP/") && method == "GET") HTTPConnectionHelper.respondToGet(this);
+            if (protocolVersion.StartsWith("HTTP/") && method == "SEND") HTTPConnectionHelper.respondToSend(this);
         }
 
         private void readProtocolInformation()
@@ -170,7 +170,7 @@ namespace Website
 
 
 
-        public static void respondTo(HTTPRequest request)
+        public static void respondToGet(HTTPRequest request)
         {
             request.fileRequestPath = HTTPRequest.ROOT + request.fileRequestPath.Replace("/", "\\");
 
@@ -187,14 +187,15 @@ namespace Website
             if (File.Exists(request.fileRequestPath))
             {
                 //it should be legit by now...
-                StreamWriter writer = new StreamWriter(request.stream);
+                //FileStream fileStream = new FileStream("T:\\Website\\HTTPOUTPUT\\" + DateTime.Now.Ticks + ".txt", FileMode.CreateNew);
+                BinaryWriter writer = new BinaryWriter(request.stream, Encoding.ASCII);
                 Console.WriteLine("Sending " + request.fileRequestPath + " to " + request.ip);
 
-                writer.WriteLine("HTTP/1.1 200 OK");
-
-                writer.WriteLine("");
+                write("HTTP/1.1 200 OK\r\n", writer);
+                
+                write("\r\n", writer);
                 byte[] fileBuffer = File.ReadAllBytes(request.fileRequestPath);
-                writer.Write(Encoding.ASCII.GetString(fileBuffer));
+                writer.Write((fileBuffer));
                 writer.Close();
             }
             else
@@ -203,6 +204,25 @@ namespace Website
             }
 
             //stream.Close();
+        }
+
+        //because binary writers literally SU U U U CK K K K.
+        //they append strings by prefixing them with the number of
+        //character in the string. BAD BECAUSE HTTP PARSERS NO LIKE
+        private static void write(string str, BinaryWriter writer) {
+            //so instead we convert the string using an ascii decoding
+            //to a byte array, then send it along its way.
+            writer.Write(Encoding.UTF8.GetBytes(str));
+        }
+
+        public static void respondToSend(HTTPRequest request) {
+            Process process = new Process();
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            //startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            startInfo.FileName = "cmd.exe";
+            startInfo.Arguments = "/C " + HTTPRequest.ROOT + "\\Website\\PythonBin\\python.exe ";
+            process.StartInfo = startInfo;
+            process.Start();
         }
 
     }
