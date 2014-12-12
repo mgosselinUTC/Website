@@ -65,7 +65,7 @@ namespace Website
         //too lazy to create a bunch of getters, so i made everything public.
         //DONT SCREW WITH THESE VARIABLES
         private static volatile int requests = 0;
-        public static string ROOT = "T:\\Website";//"C:\\Users\\mgosselin\\Desktop";
+        public static string ROOT = "T:\\Website-Data";//"C:\\Users\\mgosselin\\Desktop";
 
         public int ID = ++requests;
 
@@ -81,7 +81,7 @@ namespace Website
 
         private StreamReader reader;
 
-        Dictionary<string, string> headers = new Dictionary<string, string>();
+        public Dictionary<string, string> headers = new Dictionary<string, string>();
 
         public HTTPRequest(TcpClient client)
         {
@@ -220,7 +220,8 @@ namespace Website
             ProcessStartInfo startInfo = new ProcessStartInfo();
             //startInfo.WindowStyle = ProcessWindowStyle.Hidden;
             startInfo.FileName = "cmd.exe";
-            startInfo.Arguments = "/C " + HTTPRequest.ROOT + "\\Website\\PythonBin\\python.exe ";
+            startInfo.WorkingDirectory = HTTPRequest.ROOT;
+            startInfo.Arguments = "/C " + HTTPRequest.ROOT + "\\PythonBin\\python.exe " + HTTPRequest.ROOT + "\\PythonBin\\send.py \"" + request.headers["message"] + "\"";
             process.StartInfo = startInfo;
             process.Start();
         }
