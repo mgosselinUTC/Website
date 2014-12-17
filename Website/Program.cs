@@ -111,8 +111,10 @@ namespace Website
 
         public void respond()
         {
-            if (protocolVersion.StartsWith("HTTP/") && method == "GET") HTTPConnectionHelper.respondToGet(this);
-            if (protocolVersion.StartsWith("HTTP/") && method == "SEND") HTTPConnectionHelper.respondToSend(this);
+            if (broken) return;
+            else if (protocolVersion.StartsWith("HTTP/") && method == "GET") HTTPConnectionHelper.respondToGet(this);
+            else if (protocolVersion.StartsWith("HTTP/") && method == "SEND") HTTPConnectionHelper.respondToSend(this);
+            else if (protocolVersion.StartsWith("HTTP/") && method == "SAVE") HTTPConnectionHelper.respondToSave(this);
         }
 
         private void readProtocolInformation()
@@ -128,7 +130,15 @@ namespace Website
                 fileRequestPath = parts[1];
                 protocolVersion = parts[2];
             }
-            else throw new InvalidHTTPRequestException("Expected HTTP request declaration, got null");
+            else
+            {
+
+                reader.Close();
+                stream.Close();
+                broken = true;
+                throw new InvalidHTTPRequestException("Expected HTTP request declaration, got null");
+
+            }
             Console.WriteLine("Method:            " + method);
             Console.WriteLine("File Requested:    " + fileRequestPath);
             Console.WriteLine("HTTP Version:      " + protocolVersion);
@@ -200,7 +210,17 @@ namespace Website
             }
             else
             {
-                //return the 404 page
+                //it should be legit by now...
+                //FileStream fileStream = new FileStream("T:\\Website\\HTTPOUTPUT\\" + DateTime.Now.Ticks + ".txt", FileMode.CreateNew);
+                BinaryWriter writer = new BinaryWriter(request.stream, Encoding.ASCII);
+                Console.WriteLine("Sending " + request.fileRequestPath + " to " + request.ip);
+
+                write("HTTP/1.1 200 OK\r\n", writer);
+
+                write("\r\n", writer);
+                byte[] fileBuffer = File.ReadAllBytes(HTTPRequest.ROOT + "\\404.html");
+                writer.Write((fileBuffer));
+                writer.Close();
             }
 
             //stream.Close();
@@ -210,7 +230,7 @@ namespace Website
         //they append strings by prefixing them with the number of
         //character in the string. BAD BECAUSE HTTP PARSERS NO LIKE
         private static void write(string str, BinaryWriter writer) {
-            //so instead we convert the string using an ascii decoding
+            //so instead we convert the string using a utf8 decoding
             //to a byte array, then send it along its way.
             writer.Write(Encoding.UTF8.GetBytes(str));
         }
@@ -224,6 +244,10 @@ namespace Website
             startInfo.Arguments = "/C " + HTTPRequest.ROOT + "\\PythonBin\\python.exe " + HTTPRequest.ROOT + "\\PythonBin\\send.py \"" + request.headers["message"] + "\"";
             process.StartInfo = startInfo;
             process.Start();
+        }
+
+        public static void respondToSave(HTTPRequest request) {
+
         }
 
     }
