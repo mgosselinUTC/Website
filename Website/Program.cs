@@ -139,16 +139,19 @@ namespace Website
                 throw new InvalidHTTPRequestException("Expected HTTP request declaration, got null");
 
             }
-            Console.WriteLine("Method:            " + method);
-            Console.WriteLine("File Requested:    " + fileRequestPath);
-            Console.WriteLine("HTTP Version:      " + protocolVersion);
-            Console.WriteLine();
+            Console.WriteLine("|");
+            Console.WriteLine("|     Request From " + ip + ":" + port);
+            Console.WriteLine("|");
+            Console.WriteLine("|   Method:            " + method);
+            Console.WriteLine("|   File Requested:    " + fileRequestPath);
+            Console.WriteLine("|   HTTP Version:      " + protocolVersion);
+            Console.WriteLine("|");
         }
 
         private void readHeaderInformation()
         {
-            Console.WriteLine("Reading Header Information...");
 
+            Console.WriteLine("|");
             string line = "";
             while ((line = reader.ReadLine()) != null)
             {
@@ -163,6 +166,9 @@ namespace Website
                         string value = line.Substring(colonIndex + 1, line.Length - colonIndex - 1);
                         value = value.Trim();
                         headers.Add(key, value);
+                        value = formatForWidth(value, 50);
+                        value = value.Replace("\n", "\n|      ");
+                        Console.WriteLine("|   " + key + "\n|      " + value + "\n|");
                     }
                     //so then we exit the lopo.
                     else break;
@@ -172,6 +178,45 @@ namespace Website
                     throw new InvalidHTTPRequestException("Error parsing " + line);
                 }
             }
+            if (headers.Count == 0)
+            {
+
+                Console.WriteLine("|   No Header Information");
+                Console.WriteLine("|");
+            }
+        }
+
+        private string formatForWidth(string value, int maxWidth)
+        {
+            StringBuilder builder = new StringBuilder();
+            int lastSpace = -1;
+            int currentWidth = 0;
+            for(int i = 0; i < value.Length; i ++)
+            {
+
+                builder.Append(value[i]);
+                currentWidth++;
+
+                if(value[i] == ' ') {
+                    lastSpace = i;
+                }
+
+                if (currentWidth >= maxWidth)
+                {
+                    if (lastSpace == -1)
+                    {
+                        builder.Append("\n");
+                    }
+                    else
+                    {
+                        builder.Insert(lastSpace, "\n");
+                        lastSpace = -1;
+                    }
+                    currentWidth = 0;
+                }
+
+            }
+            return builder.ToString();
         }
     }
 
@@ -242,13 +287,50 @@ namespace Website
             startInfo.FileName = "cmd.exe";
             startInfo.WorkingDirectory = HTTPRequest.ROOT;
             startInfo.Arguments = "/C " + HTTPRequest.ROOT + "\\PythonBin\\python.exe " + HTTPRequest.ROOT + "\\PythonBin\\send.py \"" + request.headers["message"] + "\"";
+            
+
+            int pid = new Random().Next(1000, 9999);
+
+            StringBuilder builder = new StringBuilder();
+
+            startInfo.RedirectStandardOutput = true;
+            process.ErrorDataReceived += delegate(object o, DataReceivedEventArgs e) {
+                Console.WriteLine("[" + pid + " Python err] " + e.Data);
+            };
+
+
+            startInfo.RedirectStandardError = true;
+            process.OutputDataReceived += delegate(object o, DataReceivedEventArgs e) {
+                
+                Console.WriteLine("[" + pid + " Python out] " + e.Data);
+                builder.Append(e.Data + "\n");
+                if (e.Data == "Done!")
+                {
+                    BinaryWriter writer = new BinaryWriter(request.stream);
+                    write("HTTP/1.1 200 OK\r\n\n", writer);
+                    write(builder.ToString(), writer);
+                    writer.Close();
+                }
+
+            };
+
+            startInfo.UseShellExecute = false;
             process.StartInfo = startInfo;
+
             process.Start();
+            process.BeginErrorReadLine();
+            process.BeginOutputReadLine();
+
         }
 
-        public static void respondToSave(HTTPRequest request) {
+        public static void respondToSave(HTTPRequest request)
+        {
+            string toWrite = request.headers["numbers"].Replace(" ", "\n");
+            FileStream file = new FileStream(HTTPRequest.ROOT + "\\" + request.fileRequestPath, FileMode.Create);
+            BinaryWriter writer = new BinaryWriter(file);
+            write(toWrite, writer);
+            writer.Close();
 
         }
-
     }
 }
