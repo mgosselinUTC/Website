@@ -26,6 +26,14 @@ namespace Website
             TcpListener listener = new TcpListener(IPAddress.Any, port);
             listener.Start();
 
+            Process p = new Process();
+            p.StartInfo.FileName = "Explorer.exe";
+            p.StartInfo.Arguments = " http://localhost/";
+            p.Start();
+
+
+            Console.WriteLine("Root set to " + HTTPRequest.ROOT);
+
             while (true)
             {
                 Console.WriteLine("Listening for connections on port " + port + "...");
@@ -286,7 +294,7 @@ namespace Website
             //startInfo.WindowStyle = ProcessWindowStyle.Hidden;
             startInfo.FileName = "cmd.exe";
             startInfo.WorkingDirectory = HTTPRequest.ROOT;
-            startInfo.Arguments = "/C " + HTTPRequest.ROOT + "\\PythonBin\\python.exe " + HTTPRequest.ROOT + "\\PythonBin\\send.py \"" + request.headers["message"] + "\"";
+            startInfo.Arguments = "/C " + HTTPRequest.ROOT + "\\PythonBin\\python.exe " + HTTPRequest.ROOT + "\\PythonBin\\send.py \"" + request.headers["message"] + "\"" + " " + HTTPRequest.ROOT + request.fileRequestPath.Replace("/", "\\");
             
 
             int pid = new Random().Next(1000, 9999);
@@ -307,7 +315,7 @@ namespace Website
                 if (e.Data == "Done!")
                 {
                     BinaryWriter writer = new BinaryWriter(request.stream);
-                    write("HTTP/1.1 200 OK\r\n\n", writer);
+                    write("HTTP/1.1 200 OK\r\n\r\n", writer);
                     write(builder.ToString(), writer);
                     writer.Close();
                 }
@@ -331,6 +339,10 @@ namespace Website
             write(toWrite, writer);
             writer.Close();
 
+            writer = new BinaryWriter(request.stream);
+            write("HTTP/1.1 200 OK\r\n\r\n", writer);
+            write("Done!", writer);
+            writer.Close();
         }
     }
 }
