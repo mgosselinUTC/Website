@@ -18,8 +18,14 @@ namespace Website
 {
     class Program
     {
+        public static bool running = true;
+
         static void Main(string[] args)
         {
+            
+            string exePath = System.Reflection.Assembly.GetEntryAssembly().Location;
+            string exeFolder = exePath.Substring(0, exePath.LastIndexOf("\\"));
+            HTTPRequest.ROOT = exeFolder + "\\Website-Data";//"C:\\Users\\mgosselin\\Desktop";
 
             int port = 80;
 
@@ -34,7 +40,7 @@ namespace Website
 
             Console.WriteLine("Root set to " + HTTPRequest.ROOT);
 
-            while (true)
+            while (running)
             {
                 Console.WriteLine("Listening for connections on port " + port + "...");
                 try
@@ -73,7 +79,7 @@ namespace Website
         //too lazy to create a bunch of getters, so i made everything public.
         //DONT SCREW WITH THESE VARIABLES
         private static volatile int requests = 0;
-        public static string ROOT = "T:\\Website-Data";//"C:\\Users\\mgosselin\\Desktop";
+        public static string ROOT = "";
 
         public int ID = ++requests;
 
@@ -123,6 +129,7 @@ namespace Website
             else if (protocolVersion.StartsWith("HTTP/") && method == "GET") HTTPConnectionHelper.respondToGet(this);
             else if (protocolVersion.StartsWith("HTTP/") && method == "SEND") HTTPConnectionHelper.respondToSend(this);
             else if (protocolVersion.StartsWith("HTTP/") && method == "SAVE") HTTPConnectionHelper.respondToSave(this);
+            else if (protocolVersion.StartsWith("HTTP/") && method == "CLOSE") Program.running = false;
         }
 
         private void readProtocolInformation()
