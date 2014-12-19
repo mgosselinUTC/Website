@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 // username: mikepreble@gmail.com
 // password: sukirevomnrhqxxo
 
+
 namespace Website
 {
     class Program
@@ -24,12 +25,6 @@ namespace Website
 
             TcpListener listener = new TcpListener(IPAddress.Any, port);
             listener.Start();
-
-            //open up the webpage...
-            Process process = new Process();
-            process.StartInfo.FileName = "explorer.exe";
-            process.StartInfo.Arguments = "http://localhost/";
-            process.Start();
 
             while (true)
             {
@@ -282,14 +277,7 @@ namespace Website
         private static void write(string str, BinaryWriter writer) {
             //so instead we convert the string using a utf8 decoding
             //to a byte array, then send it along its way.
-            try
-            {
-                writer.Write(Encoding.UTF8.GetBytes(str));
-            }
-            catch (Exception e)
-            {
-
-            }
+            writer.Write(Encoding.UTF8.GetBytes(str));
         }
 
         public static void respondToSend(HTTPRequest request) {
@@ -319,17 +307,8 @@ namespace Website
                 if (e.Data == "Done!")
                 {
                     BinaryWriter writer = new BinaryWriter(request.stream);
-                    write("HTTP/1.1 200 OK\n\n", writer);
-
-                    if (builder.ToString().EndsWith("\n0 errors\nDone!\n"))
-                    {
-                        write("Done!", writer);
-                    }
-                    else
-                    {
-                        write("An Error Occurred...", writer);
-                    }
-                    
+                    write("HTTP/1.1 200 OK\r\n\n", writer);
+                    write(builder.ToString(), writer);
                     writer.Close();
                 }
 
@@ -351,14 +330,7 @@ namespace Website
             BinaryWriter writer = new BinaryWriter(file);
             write(toWrite, writer);
             writer.Close();
-            //write to the file ^^
-            
-            //now inform the user thusly \/ \/
-            writer = new BinaryWriter(request.stream);
-            write("HTTP/1.1 200 OK\r\n", writer);
-            write("\r\n", writer);
-            write("Done!", writer);
-            writer.Close();
+
         }
     }
 }
