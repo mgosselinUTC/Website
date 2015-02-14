@@ -14,9 +14,7 @@ namespace Website
     {
         static void Main(string[] args)
         {
-
-            
-            TcpListener listener = new TcpListener(IPAddress.Any, 80);
+            TcpListener listener = new TcpListener(IPAddress.Any, 81);
             listener.Start();
 
             while (true)
@@ -57,7 +55,7 @@ namespace Website
 
                     Dictionary<string, string> headers = new Dictionary<string, string>();
                     
-                    //time to oop through our lines and look for headers
+                    //time to loop through our lines and look for headers
                     while ((line = reader.ReadLine()) != null)
                     {
                             try
@@ -72,7 +70,7 @@ namespace Website
                                     value = value.Trim();
                                     headers.Add(key, value);
                                 }
-                                    //so then we exit the lopo.
+                                    //so then we exit the loop.
                                 else break;
                             }
                             catch (Exception e)
@@ -81,7 +79,7 @@ namespace Website
                             }
                     }
                     //so if we haven't escaped yet, well, lets give them that file.
-                    string ROOT = "C:\\Users\\mgosselin\\Desktop";
+                    string ROOT = "C:\\Users\\Marcus\\Desktop";
                     fileRequestPath = ROOT + fileRequestPath.Replace("/", "\\");
 
                     Console.WriteLine(ip + " is requesting " + fileRequestPath);
