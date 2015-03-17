@@ -22,7 +22,6 @@ namespace Website
 
         static void Main(string[] args)
         {
-            TcpListener listener = new TcpListener(IPAddress.Any, 81);
             
             string exePath = System.Reflection.Assembly.GetEntryAssembly().Location;
             string exeFolder = exePath.Substring(0, exePath.LastIndexOf("\\"));
@@ -166,36 +165,10 @@ namespace Website
 
         private void readHeaderInformation()
         {
-                    Dictionary<string, string> headers = new Dictionary<string, string>();
-                    
-                    //time to loop through our lines and look for headers
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                            try
-                            {
-                                // on the last line before the data body, this happens, the line is "" 
-                                if (line != "")
-                                {
-                                    int colonIndex = line.IndexOf(':');
-                                    string key = line.Substring(0, colonIndex);
-                                    key = key.Trim();
-                                    string value = line.Substring(colonIndex + 1, line.Length - colonIndex - 1);
-                                    value = value.Trim();
-                                    headers.Add(key, value);
-                                }
-                                    //so then we exit the loop.
-                                else break;
-                            }
-                            catch (Exception e)
-                            {
-                                throw new InvalidHTTPRequestException("Error parsing " + line);
-                            }
-                    }
-                    //so if we haven't escaped yet, well, lets give them that file.
-                    string ROOT = "C:\\Users\\Marcus\\Desktop";
-                    fileRequestPath = ROOT + fileRequestPath.Replace("/", "\\");
-            Console.WriteLine("|");
+            Dictionary<string, string> headers = new Dictionary<string, string>();
             string line = "";
+            //time to loop through our lines and look for headers
+                    
             while ((line = reader.ReadLine()) != null)
             {
                 try
